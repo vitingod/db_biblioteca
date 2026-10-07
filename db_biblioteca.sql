@@ -1,0 +1,134 @@
+-- create table leitores (
+--     id serial primary key,
+--     nome varchar(100) not null,
+--     email varchar(150) unique not null,
+--     cpf char(11) unique not null,
+--     telefone varchar(20) not null,
+--     data_cadastro timestamp default current_timestamp
+-- );
+-- create table categorias (
+--     id serial primary key,
+--     nome varchar(100) unique not null
+-- );
+-- create table livros (
+--     id serial primary key,
+--     categoria_id integer not null,
+--     titulo varchar(150) not null,
+--     isbn varchar(20) unique not null,
+--     taxa_diaria decimal(10,2) not null check (taxa_diaria > 0),
+--     disponivel boolean default true,
+--     constraint fk_livro_categoria
+--         foreign key (categoria_id)
+--         references categorias(id)
+-- );
+-- create table emprestimos (
+--     id serial primary key,
+--     leitor_id integer not null,
+--     data_emprestimo timestamp default current_timestamp,
+--     status varchar(20) default 'ativo'
+--         check (status in ('ativo', 'devolvido', 'atrasado')),
+--     constraint fk_emprestimo_leitor
+--         foreign key (leitor_id)
+--         references leitores(id)
+-- );
+-- create table itens_emprestimo (
+--     id serial primary key,
+--     emprestimo_id integer not null,
+--     livro_id integer not null,
+--     quantidade integer not null check (quantidade > 0),
+--     valor_diaria decimal(10,2) not null check (valor_diaria >= 0),
+--     constraint fk_item_emprestimo
+--         foreign key (emprestimo_id)
+--         references emprestimos(id),
+--     constraint fk_item_livro
+--         foreign key (livro_id)
+--         references livros(id)
+-- );
+-- insert into categorias (nome) values
+-- ('ficção'),
+-- ('história'),
+-- ('tecnologia');
+-- insert into livros (categoria_id, titulo, isbn, taxa_diaria, disponivel) values
+-- (1, 'o hobbit', '9780007525515', 6.50, true),
+-- (2, 'história do brasil', '9788535902771', 4.50, true),
+-- (3, 'clean code', '9780132350884', 8.00, true);
+-- insert into leitores (nome, email, cpf, telefone) values
+-- ('carlos silva', 'carlos@email.com', '11111111111', '48999990001'),
+-- ('ana souza', 'ana@email.com', '22222222222', '48999990002'),
+-- ('pedro santos', 'pedro@email.com', '33333333333', '48999990003');
+-- insert into emprestimos (leitor_id, status) values
+-- (1, 'ativo'),
+-- (1, 'devolvido'),
+-- (2, 'devolvido'),
+-- (3, 'atrasado');
+-- insert into itens_emprestimo
+-- (emprestimo_id, livro_id, quantidade, valor_diaria) values
+-- (1, 1, 1, 6.50),
+-- (2, 3, 1, 8.00),
+-- (3, 2, 2, 4.50),
+-- (4, 1, 1, 6.50);
+-- create view vw_acervo_ordenado as
+-- select
+--     l.titulo,
+--     l.isbn,
+--     c.nome as categoria,
+--     l.taxa_diaria
+-- from livros l
+-- join categorias c
+--     on l.categoria_id = c.id
+-- order by l.taxa_diaria desc;
+-- select * from vw_acervo_ordenado;
+-- create view vw_emprestimos_carlos as
+-- select
+--     e.id as id_emprestimo,
+--     e.data_emprestimo,
+--     l.titulo,
+--     i.quantidade,
+--     e.status
+-- from emprestimos e
+-- join leitores le
+--     on e.leitor_id = le.id
+-- join itens_emprestimo i
+--     on e.id = i.emprestimo_id
+-- join livros l
+--     on i.livro_id = l.id
+-- where le.nome = 'carlos silva';
+-- select * from vw_emprestimos_carlos;
+-- create view vw_total_emprestimos as
+-- select
+--     e.id as id_emprestimo,
+--     le.nome as leitor,
+--     sum(i.quantidade * i.valor_diaria) as valor_total
+-- from emprestimos e
+-- join leitores le
+--     on e.leitor_id = le.id
+-- join itens_emprestimo i
+--     on e.id = i.emprestimo_id
+-- group by e.id, le.nome;
+-- select * from vw_total_emprestimos;
+-- select
+--     l.titulo,
+--     l.isbn,
+--     l.taxa_diaria,
+--     l.disponivel
+-- from livros l
+-- join categorias c
+--     on l.categoria_id = c.id
+-- where c.nome = 'ficção'
+--   and l.taxa_diaria > 5.00
+--   and l.disponivel = true;
+-- create view vw_faturamento_por_categoria as
+-- select
+--     c.nome as categoria,
+--     sum(i.quantidade * i.valor_diaria) as total_arrecadado
+-- from categorias c
+-- join livros l
+--     on c.id = l.categoria_id
+-- join itens_emprestimo i
+--     on l.id = i.livro_id
+-- join emprestimos e
+--     on i.emprestimo_id = e.id
+-- where e.status = 'devolvido'
+-- group by c.id, c.nome
+-- order by total_arrecadado desc;
+-- select * from vw_faturamento_por_categoria;
